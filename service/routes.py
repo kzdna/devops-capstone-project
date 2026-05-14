@@ -1,10 +1,9 @@
-from flask import jsonify, request, abort
+from flask import jsonify, request, abort, Flask 
 from service import app, status
 from service.models import Account, db
 from flask_cors import CORS 
 from flask_talisman import Talisman
 
-app = Flask(__name__)
 CORS(app) 
 Talisman(app)
 
