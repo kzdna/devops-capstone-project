@@ -1,19 +1,23 @@
 import unittest
-from service import app, status
+from service import app, status, talisman  # <--- Tambahkan talisman di sini
 from service.models import db, Account
 
 BASE_URL = "/accounts"
-# Exercise 3: Menambahkan environment HTTPS untuk testing Talisman
 HTTPS_ENVIRON = {'wsgi.url_scheme': 'https'}
 
 class TestAccountRoutes(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        """Run once before all tests"""
         app.config["TESTING"] = True
         app.config["DEBUG"] = False
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
+        # Exercise 5: Matikan paksa HTTPS khusus untuk testing
+        talisman.force_https = False 
         with app.app_context():
             db.create_all()
+            
+    # ... sisa kode setUp dan test cases lainnya tetap sama ...
 
     def setUp(self):
         with app.app_context():
