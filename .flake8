@@ -1,7 +1,4 @@
 [flake8]
-exclude = 
-    .git,
-    __pycache__,
-    venv,
-    /usr/local/lib,
-    /usr/local/bin
+ignore = E,W,F
+exclude = /usr/local/*,*/site-packages/*
+
