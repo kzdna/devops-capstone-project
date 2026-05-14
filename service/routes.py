@@ -4,6 +4,10 @@ from service.models import Account, db
 from flask_cors import CORS 
 from flask_talisman import Talisman
 
+######################################################################
+# SECURITY CONFIGURATION (Exercise 2: Biarkan bertanda # dulu)
+# Nanti untuk Exercise 3 & 4, hapus tanda # di bawah ini
+######################################################################
 CORS(app) 
 Talisman(app)
 
