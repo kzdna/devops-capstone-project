@@ -1,8 +1,9 @@
 import unittest
-from service import app, status, talisman  # <--- Tambahkan talisman di sini
+from service import app, status, talisman
 from service.models import db, Account
 
 BASE_URL = "/accounts"
+# Environment HTTPS untuk testing Talisman
 HTTPS_ENVIRON = {'wsgi.url_scheme': 'https'}
 
 class TestAccountRoutes(unittest.TestCase):
@@ -12,20 +13,20 @@ class TestAccountRoutes(unittest.TestCase):
         app.config["TESTING"] = True
         app.config["DEBUG"] = False
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
-        # Exercise 5: Matikan paksa HTTPS khusus untuk testing
+        # Exercise 5: Matikan paksa HTTPS khusus untuk testing agar tidak redirect 302
         talisman.force_https = False 
         with app.app_context():
             db.create_all()
-            
-    # ... sisa kode setUp dan test cases lainnya tetap sama ...
 
     def setUp(self):
+        """Runs before each test"""
         with app.app_context():
             db.session.query(Account).delete()
             db.session.commit()
         self.client = app.test_client()
 
     def _create_accounts(self, count):
+        """Helper method to create accounts in bulk"""
         accounts = []
         with app.app_context():
             for _ in range(count):
@@ -37,7 +38,7 @@ class TestAccountRoutes(unittest.TestCase):
         return accounts
 
     # ----------------------------------------------------------
-    # TEST CASES UNTUK SECURITY HEADERS (Exercise 3)
+    # TEST CASES UNTUK SECURITY & CORS (Exercise 3 & 7)
     # ----------------------------------------------------------
     def test_security_headers(self):
         """It should return security headers"""
@@ -51,6 +52,13 @@ class TestAccountRoutes(unittest.TestCase):
         }
         for key, value in headers.items():
             self.assertEqual(response.headers.get(key), value)
+
+    def test_cors_security(self):
+        """It should return a CORS header"""
+        response = self.client.get('/', environ_overrides=HTTPS_ENVIRON)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Exercise 7: Cek apakah header CORS (Access-Control-Allow-Origin) ada
+        self.assertEqual(response.headers.get('Access-Control-Allow-Origin'), '*')
 
     # ----------------------------------------------------------
     # TEST CASES UNTUK INDEX
