@@ -1,4 +1,4 @@
 [flake8]
 ignore = E,W,F
-exclude = /usr/local/*,*/site-packages/*
+exclude = .git,__pycache__,venv,env,/usr/local/*,*/site-packages/*
 

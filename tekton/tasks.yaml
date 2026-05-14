@@ -1,0 +1,38 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: nose
+spec:
+  workspaces:
+    - name: source
+  params:
+    - name: args
+      type: string
+      default: "-v"
+  steps:
+    - name: nosetests
+      image: python:3.9-slim
+      script: |
+        # Cari requirements.txt
+        REQ_PATH=$(find /workspace -name "requirements.txt" | head -n 1)
+        cd $(dirname "$REQ_PATH")
+        pip install -r requirements.txt
+        pytest $(params.args)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: lint
+spec:
+  workspaces:
+    - name: source
+  steps:
+    - name: flake8
+      image: python:3.9-slim
+      script: |
+        # Cari lokasi kode aplikasi
+        REQ_PATH=$(find /workspace -name "requirements.txt" | head -n 1)
+        cd $(dirname "$REQ_PATH")
+        pip install flake8
+        # HANYA scan folder aplikasi, ABAIKAN folder sistem
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
