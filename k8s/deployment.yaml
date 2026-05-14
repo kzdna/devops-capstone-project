@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: accounts
+  labels:
+    app: accounts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: accounts
+  template:
+    metadata:
+      labels:
+        app: accounts
+    spec:
+      containers:
+      - name: accounts
+        image: us.icr.io/sn-labs-u11120231305/accounts:1
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DATABASE_URI
+          # Sudah disesuaikan dengan output terminal kamu tadi
+          value: postgresql://userYMI:rtAbC8aATkkS62cy@postgresql:5432/sampledb
+        volumeMounts:
+        - name: instance-data
+          mountPath: /app/instance
+      volumes:
+      - name: instance-data
+        emptyDir: {}
