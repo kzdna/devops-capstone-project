@@ -1,25 +1,32 @@
 import unittest
-from service import app, status
+from service import app, status, talisman
 from service.models import db, Account
 
 BASE_URL = "/accounts"
+# Environment HTTPS untuk testing Talisman
+HTTPS_ENVIRON = {'wsgi.url_scheme': 'https'}
 
 class TestAccountRoutes(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        """Run once before all tests"""
         app.config["TESTING"] = True
         app.config["DEBUG"] = False
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
+        # Exercise 5: Matikan paksa HTTPS khusus untuk testing agar tidak redirect 302
+        talisman.force_https = False 
         with app.app_context():
             db.create_all()
 
     def setUp(self):
+        """Runs before each test"""
         with app.app_context():
             db.session.query(Account).delete()
             db.session.commit()
         self.client = app.test_client()
 
     def _create_accounts(self, count):
+        """Helper method to create accounts in bulk"""
         accounts = []
         with app.app_context():
             for _ in range(count):
@@ -31,17 +38,40 @@ class TestAccountRoutes(unittest.TestCase):
         return accounts
 
     # ----------------------------------------------------------
-    # TEST CASES UNTUK INDEX (Tambahan biar Coverage naik)
+    # TEST CASES UNTUK SECURITY & CORS (Exercise 3 & 7)
+    # ----------------------------------------------------------
+    def test_security_headers(self):
+        """It should return security headers"""
+        response = self.client.get('/', environ_overrides=HTTPS_ENVIRON)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        headers = {
+            'X-Frame-Options': 'SAMEORIGIN',
+            'X-Content-Type-Options': 'nosniff',
+            'Content-Security-Policy': 'default-src \'self\'; object-src \'none\'',
+            'Referrer-Policy': 'strict-origin-when-cross-origin'
+        }
+        for key, value in headers.items():
+            self.assertEqual(response.headers.get(key), value)
+
+    def test_cors_security(self):
+        """It should return a CORS header"""
+        response = self.client.get('/', environ_overrides=HTTPS_ENVIRON)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Exercise 7: Cek apakah header CORS (Access-Control-Allow-Origin) ada
+        self.assertEqual(response.headers.get('Access-Control-Allow-Origin'), '*')
+
+    # ----------------------------------------------------------
+    # TEST CASES UNTUK INDEX
     # ----------------------------------------------------------
     def test_index(self):
         """It should return the index page"""
-        resp = self.client.get("/")
+        resp = self.client.get("/", environ_overrides=HTTPS_ENVIRON)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data["name"], "Account REST API Service")
 
     # ----------------------------------------------------------
-    # TEST CASES UNTUK CREATE (Tambahan biar POST tercover)
+    # TEST CASES UNTUK CREATE
     # ----------------------------------------------------------
     def test_create_account(self):
         """It should Create a new Account"""
@@ -49,7 +79,8 @@ class TestAccountRoutes(unittest.TestCase):
         resp = self.client.post(
             BASE_URL,
             json=account_data,
-            content_type="application/json"
+            content_type="application/json",
+            environ_overrides=HTTPS_ENVIRON
         )
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         new_account = resp.get_json()
@@ -61,14 +92,20 @@ class TestAccountRoutes(unittest.TestCase):
     def test_get_account(self):
         """It should Read a single Account"""
         account = self._create_accounts(1)[0]
-        resp = self.client.get(f"{BASE_URL}/{account.temp_id}")
+        resp = self.client.get(
+            f"{BASE_URL}/{account.temp_id}", 
+            environ_overrides=HTTPS_ENVIRON
+        )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data["name"], account.name)
 
     def test_get_account_not_found(self):
         """It should not Read an Account that is not found"""
-        resp = self.client.get(f"{BASE_URL}/0")
+        resp = self.client.get(
+            f"{BASE_URL}/0", 
+            environ_overrides=HTTPS_ENVIRON
+        )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     # ----------------------------------------------------------
@@ -82,7 +119,8 @@ class TestAccountRoutes(unittest.TestCase):
         resp = self.client.put(
             f"{BASE_URL}/{account.temp_id}", 
             json=new_account, 
-            content_type="application/json"
+            content_type="application/json",
+            environ_overrides=HTTPS_ENVIRON
         )
         
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -91,7 +129,11 @@ class TestAccountRoutes(unittest.TestCase):
 
     def test_update_account_not_found(self):
         """It should not Update an Account that is not found"""
-        resp = self.client.put(f"{BASE_URL}/0", json={"name": "test"})
+        resp = self.client.put(
+            f"{BASE_URL}/0", 
+            json={"name": "test"},
+            environ_overrides=HTTPS_ENVIRON
+        )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     # ----------------------------------------------------------
@@ -100,7 +142,10 @@ class TestAccountRoutes(unittest.TestCase):
     def test_delete_account(self):
         """It should Delete an Account"""
         account = self._create_accounts(1)[0]
-        resp = self.client.delete(f"{BASE_URL}/{account.temp_id}")
+        resp = self.client.delete(
+            f"{BASE_URL}/{account.temp_id}", 
+            environ_overrides=HTTPS_ENVIRON
+        )
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
 
     # ----------------------------------------------------------
@@ -109,7 +154,10 @@ class TestAccountRoutes(unittest.TestCase):
     def test_get_account_list(self):
         """It should Get a list of Accounts"""
         self._create_accounts(5)
-        resp = self.client.get(BASE_URL)
+        resp = self.client.get(
+            BASE_URL, 
+            environ_overrides=HTTPS_ENVIRON
+        )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(len(data), 5)

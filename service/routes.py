@@ -2,11 +2,13 @@ from flask import jsonify, request, abort
 from service import app, status
 from service.models import Account, db
 from flask_cors import CORS 
-from flask_talisman import Talisman
 
-app = Flask(__name__)
+######################################################################
+# SECURITY CONFIGURATION
+######################################################################
+# Talisman sudah dipindah ke __init__.py sesuai instruksi Exercise 4
+# CORS kita biarkan di sini untuk mengizinkan akses Cross-Origin
 CORS(app) 
-Talisman(app)
 
 @app.route("/", methods=["GET"])
 def index():
