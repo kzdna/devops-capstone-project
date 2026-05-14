@@ -31,6 +31,31 @@ class TestAccountRoutes(unittest.TestCase):
         return accounts
 
     # ----------------------------------------------------------
+    # TEST CASES UNTUK INDEX (Tambahan biar Coverage naik)
+    # ----------------------------------------------------------
+    def test_index(self):
+        """It should return the index page"""
+        resp = self.client.get("/")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["name"], "Account REST API Service")
+
+    # ----------------------------------------------------------
+    # TEST CASES UNTUK CREATE (Tambahan biar POST tercover)
+    # ----------------------------------------------------------
+    def test_create_account(self):
+        """It should Create a new Account"""
+        account_data = {"name": "John Doe"}
+        resp = self.client.post(
+            BASE_URL,
+            json=account_data,
+            content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        new_account = resp.get_json()
+        self.assertEqual(new_account["name"], "John Doe")
+
+    # ----------------------------------------------------------
     # TEST CASES UNTUK READ
     # ----------------------------------------------------------
     def test_get_account(self):
@@ -51,18 +76,15 @@ class TestAccountRoutes(unittest.TestCase):
     # ----------------------------------------------------------
     def test_update_account(self):
         """It should Update an existing Account"""
-        # 1. Buat akun dulu
         account = self._create_accounts(1)[0]
         new_account = {"name": "Updated Name"}
         
-        # 2. Kirim request PUT untuk update
         resp = self.client.put(
             f"{BASE_URL}/{account.temp_id}", 
             json=new_account, 
             content_type="application/json"
         )
         
-        # 3. Cek apakah berhasil (200 OK)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         updated_account = resp.get_json()
         self.assertEqual(updated_account["name"], "Updated Name")

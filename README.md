@@ -1,3 +1,5 @@
 # devops-capstone-project
 
-![CI Workflow](https://github.com/kzdna/devops-capstone-project.git)git checkout -b ci-automation
+![Build Status](https://github.com/kzdna/devops-capstone-project/actions/workflows/ci-build.yaml/badge.svg)
+
+ini isi README ku

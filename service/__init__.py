@@ -7,4 +7,5 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
 
-from service import routes
+# Import routes di akhir untuk menghindari circular import
+from service import routes  # noqa: F401, E402
