@@ -1,0 +1,8 @@
+flask
+flask-sqlalchemy
+psycopg2-binary
+flake8
+pytest
+pytest-flask
+flask-talisman
+flask-cors
