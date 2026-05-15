@@ -1,0 +1,4 @@
+[flake8]
+ignore = E,W,F
+exclude = .git,__pycache__,venv,env,/usr/local/*,*/site-packages/*
+
